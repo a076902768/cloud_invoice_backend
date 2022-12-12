@@ -4,9 +4,10 @@
  * Module dependencies.
  */
 
-var app = require('../app');
-var debug = require('debug')('cloud-invoice-backend:server');
-var http = require('http');
+import app from '../app.js';
+import Debug from 'debug';
+const debug = Debug('cloud-invoice-backend:server');
+import http from 'http';
 
 /**
  * Get port from environment and store in Express.
