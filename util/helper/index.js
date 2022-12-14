@@ -4,10 +4,10 @@ class helper {
    * @param {any} data 要帶給前端的data
    * @returns 
    */
-  static apiFormatter({ code, data }) {
+  static apiFormatter({ code, message = "success", data }) {
     return {
       code: code,
-      message: "Success",
+      message: message,
       responseData: data,
     }
   }
