@@ -23,12 +23,47 @@ app.set('port', port);
 var server = http.createServer(app);
 
 /**
+ * 連接池設定
+ */
+
+import sql from 'mssql';
+
+const config = {
+  user: 'web',
+  password: '123456',
+  server: 'localhost',
+  database: 'cloud_invoice',
+  options: {
+    trustServerCertificate: true // change to true for local dev / self-signed certs
+  },
+  pool: {
+    max: 10,
+    min: 0,
+    idleTimeoutMillis: 30000
+  }
+};
+
+const appPool = new sql.ConnectionPool(config);
+
+appPool.connect().then((pool) => {
+  app.locals.db = pool;
+  server.listen(port);
+  server.on('error', onError);
+  server.on('listening', onListening);
+  const host = server.address().address;
+  // const port = server.address().port;
+  console.log(host, port)
+}).catch(function (err) {
+  console.error('Error creating connection pool', err)
+});
+
+/**
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+// server.listen(port);
+// server.on('error', onError);
+// server.on('listening', onListening);
 
 /**
  * Normalize a port into a number, string, or false.
