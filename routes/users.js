@@ -3,10 +3,11 @@ import helper from '../util/helper/index.js';
 var router = express.Router();
 import app from '../app.js';
 import multer from "multer";
+import MessageEnum from '../util/enum/messageEnum.js';
 const upload = multer()
 
 /* GET users listing. */
-router.get('/', async function(req, res, next) {
+router.get('/', async (req, res, next) => {
   const sql = 'select * from userInfo';
   await app.locals.db.query(sql, function (err, { recordset }) {
     if (err) console.log(err);
@@ -15,19 +16,45 @@ router.get('/', async function(req, res, next) {
   });
 });
 
+/**
+ * 驗證方法採信箱、手機皆相同代表存在，其中一個不同代表為不一樣的user
+ * @param {String} email 註冊信箱
+ * @param {String} phone 註冊手機
+ * @returns 若該信箱和手機已存在於DB，返回true 反之返回false
+ */
+const findExistUser = async ({ email, phone }) => {
+  const searchSql = `
+  select * from userInfo 
+  WHERE email = '${email}' AND phone = '${phone}';
+  `;
+  const { recordset } = await app.locals.db.query(searchSql);
+  return !!recordset.length;
+};
 
-router.post('/register', upload.array(), async function(req, res, next) {
+
+router.post('/register', upload.array(), async (req, res, next) => {
   let formData = req.body;
   console.log(formData);
-  console.log(formData.name);
 
-  if (!formData.name || formData.phone || !formData.email) {
-    res.json(helper.apiFormatter({ code: 'E9999', message: '名稱、手機號碼或是信箱未輸入' }));
+  if (!formData.phone || !formData.email || !formData.pwd) {
+    res.json(helper.apiFormatter({ code: MessageEnum.E0001.code, message: MessageEnum.E0001.message }));
     return;
   }
 
-  const sql = `INSERT INTO userInfo (name, phone, email) VALUES ('${formData.name}', '${String(formData.phone)}', '${formData.email}')`;
-  await app.locals.db.query(sql, function (err, data) {
+  if (await findExistUser(formData)) {
+    res.json(helper.apiFormatter({ code: MessageEnum.E0002.code, message: MessageEnum.E0002.message }));
+    return;
+  }
+
+  const sql = `
+  INSERT INTO userInfo (phone, email)
+  VALUES ('${String(formData.phone)}', '${formData.email}');
+
+  UPDATE userInfo
+  SET pwd = PWDENCRYPT('${formData.pwd}')
+  WHERE email = '${formData.email}';
+  `;
+  await app.locals.db.query(sql, (err, data) => {
     console.log(data);
     if (err) console.log(err);
 
