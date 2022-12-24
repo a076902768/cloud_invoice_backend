@@ -8,9 +8,9 @@ class helper {
     return {
       code: code,
       message: message,
-      responseData: data,
+      responseData: data
     }
   }
 };
 
-export default helper;
+module.exports = helper;
