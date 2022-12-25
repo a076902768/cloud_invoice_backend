@@ -1,35 +1,44 @@
 const users = require('../models').users;
 const apiFormatter = require('../util/helper/index.js').apiFormatter;
-
-console.log('測試', users);
+const MessageEnum = require('../util/enum/messageEnum.js');
 
 module.exports = {
-  create(req, res) {
-    const { phone, email } = req.body;
+  register(req, res) {
+    const { phone, email, pwd } = req.body;
 
     return users
       .create({
         phone: phone,
         email: email,
+        pwd: pwd
       })
       .then((todo) => res.status(200).send(todo))
       .catch((error) => {
-        console.log(error.parent);
-        res.json(apiFormatter({ code: 400, message: error.parent.detail}));
-        // res.status(400).send(error.parent.detail)
+        res.json(apiFormatter({ code: 400, message: error.errors[0].message}));
       });
   },
-  // findAll(req, res) {
-  //   const { phone, email } = req.body;
+  async login(req, res) {
+    const { phone, email, pwd } = req.body;
+    const user = await users.findOne({
+      where: {
+        phone,
+        email,
+      }
+    });
 
-  //   return users
-  //     .findAll({
-  //       where: {
-  //         phone,
-  //         email
-  //       }
-  //     })
-  //     .then((todo) => res.status(201).send(todo))
-  //     .catch((error) => res.status(400).send(error));
-  // }
+    // Check to see if user is in db
+    if (!user) {
+      res.json(apiFormatter({ code: MessageEnum.E0003.code, message: MessageEnum.E0003.message }));
+    }
+
+    const isPasswordValid = user.authenticate(pwd);
+
+    if (!isPasswordValid) {
+      res.json(apiFormatter({ code: MessageEnum.E0004.code, message: MessageEnum.E0004.message }));
+    }
+
+    const userJson = user.toJSON();
+
+    res.json(apiFormatter({ code: 200, message: { user: userJson, token: '功能未開發...' }}));
+  }
 };

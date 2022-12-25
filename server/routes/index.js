@@ -8,17 +8,23 @@ module.exports = (app) => {
   app.get('/api', (req, res) => res.status(200).send({
     message: 'Welcome to the Todos API!',
   }));
-
+  /**
+   * 註冊的middleware
+   * 註冊前需判斷email、phone皆有填
+   * 其中一個沒填則擋住
+   */
   const registerMiddleware = (req, res, next) => {
-    const { phone, email } = req.body;
-    if (!phone|| !email) {
-      res.json(apiFormatter({ code: MessageEnum.E0001.code, message: MessageEnum.E0001.message}));
+    const { phone, email, pwd } = req.body;
+    if (!phone || !email || !pwd) {
+      res.json(apiFormatter({ code: MessageEnum.E0001.code, message: MessageEnum.E0001.message }));
       return;
     }
     next();
   };
 
-  app.post('/users/register', registerMiddleware, usersController.create);
+  app.post('/users/register', registerMiddleware, usersController.register);
+
+  app.post('/users/login', usersController.login);
 
   app.post('/api/todos', todosController.create);
   app.get('/api/todos', todosController.list);

@@ -1,3 +1,11 @@
+const useBcrypt = require('sequelize-bcrypt');
+
+const options = {
+  field: 'pwd', // secret field to hash, default: 'password'
+  rounds: 12, // used to generate bcrypt salt, default: 12
+  compare: 'authenticate', // method used to compare secrets, default: 'authenticate'
+};
+
 module.exports = (sequelize, DataTypes) => {
   const users = sequelize.define('users', {
     uid: {
@@ -10,8 +18,13 @@ module.exports = (sequelize, DataTypes) => {
     },
     email: {
       type: DataTypes.STRING,
-      isEmail: true, //checks for email format
-    }
+      validate: {
+        isEmail: true,
+      }
+    },
+    pwd: {
+      type: DataTypes.STRING,
+    },
   },
     {
       freezeTableName: true,
@@ -23,11 +36,8 @@ module.exports = (sequelize, DataTypes) => {
       createdAt: 'created_at',
       updatedAt: 'updated_at'
     });
-  // users.associate = (models) => {
-  //   users.hasMany(models.TodoItem, {
-  //     foreignKey: 'todoId',
-  //     as: 'todoItems',
-  //   });
-  // };
+
+  useBcrypt(users, options);
+
   return users;
 };
