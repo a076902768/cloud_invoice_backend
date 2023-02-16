@@ -17,4 +17,11 @@ MessageEnum.M0005 = new MessageEnum('M0005', 'TOKEN過期，請重新登入');
 
 MessageEnum.M0006 = new MessageEnum('M0006', '尚未綁定財政部資料');
 
+MessageEnum.M0007 = new MessageEnum('M0007', '請勿重複綁定');
+
+/**
+ * 驗證錯誤
+ */
+MessageEnum.M0008 = new MessageEnum('M0008', '驗證錯誤');
+
 module.exports = MessageEnum;

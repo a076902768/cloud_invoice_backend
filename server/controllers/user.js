@@ -132,15 +132,35 @@ module.exports = {
         }
       });
 
+      // 判斷使用者是否存在於DB
+      if (!result) {
+        return res.json(apiFormatter({ code: MessageEnum.M0003.code, message: MessageEnum.M0003.message }));
+      }
+
+      /**
+       * 若使用者已綁定財政部資料則回報錯誤訊息
+       */
+      if (result.card_encrypt && result.card_no) {
+        return res.json(apiFormatter({ code: MessageEnum.M0007.code, message: MessageEnum.M0007.message }));
+      }
+
       // 取得手機條碼
-      const { carrierId2 } = await getCarrierId({ phone: result.phone, cardEncrypt: card_encrypt, CAPTCHA: captcha });
+      const data = await getCarrierId({ phone, cardEncrypt: card_encrypt, CAPTCHA: captcha });
+
+
+      /**
+       * 自動登入過程中，發生驗證碼錯誤、帳密輸入錯誤，皆回報驗證錯誤error
+       */
+      if (!data?.carrierId2) {
+        return res.json(apiFormatter({ code: MessageEnum.M0008.code, message: MessageEnum.M0008.message }));
+      }
 
       const hashCardEncrypt = bcrypt.hashSync(card_encrypt, 10);
 
       await user.update(
         {
           card_encrypt: hashCardEncrypt,
-          card_no: carrierId2
+          card_no: data.carrierId2
         },
         {
           where: {
@@ -152,6 +172,7 @@ module.exports = {
 
       return res.json(apiFormatter({ code: 200, message: 'success' }));
     } catch (error) {
+      console.log(error);
       return res.send(error);
     }
   },

@@ -82,10 +82,19 @@ const getCarrierId = async ({ phone, cardEncrypt, CAPTCHA }) => {
     if (result) page.removeListener('response', listenResponse);
   }
 
+  const listenDialog = async (dialog) => {
+    console.warn(`A dialog box has appeared: ${dialog.message()}`);
+    await dialog.dismiss(); // 不執行alert的確認或是取消
+    await page.goBack(); // 如果偵聽到有alert到出現
+    page.removeListener('dialog', listenDialog);
+  }
+
   page.on('response', listenResponse);
 
+  page.on('dialog', listenDialog);
+
   await login({ phone, cardEncrypt, CAPTCHA }); // 自動完成登入
-  await page.waitForNavigation(); // 等待页面加载完成
+  await page.waitForNavigation(); // 等待頁面加載完成
   await close();
 
   return result;
